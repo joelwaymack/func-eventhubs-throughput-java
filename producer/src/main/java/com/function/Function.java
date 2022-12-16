@@ -3,7 +3,6 @@ package com.function;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 
-import java.util.Optional;
 import java.util.Random;
 
 public class Function {
@@ -23,36 +22,7 @@ public class Function {
         minValueForEvent = parseEnvInt("MinValueForEvent", minValueForEvent);
         maxValueForEvent = parseEnvInt("MaxValueForEvent", maxValueForEvent);
     }
-
-    @FunctionName("CreateEventBatchMessages")
-    public HttpResponseMessage createEventBatchMessages(
-            @HttpTrigger(name = "req", methods = { HttpMethod.GET,
-                    HttpMethod.POST }, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request,
-            @QueueOutput(name = "eventBatchMessage", queueName = "%MessageQueueName%", connection = "QueueStorage") OutputBinding<int[]> batchMessages,
-            final ExecutionContext context) {
-        context.getLogger().info("Batch creation request received.");
-
-        // Get the number of batches to produce.
-        final String query = request.getQueryParameters().get("batches");
-        int batches = randomInt(minBatchesPerTimer, maxBatchesPerTimer);
-        if (query != null && !query.isBlank()) {
-            try {
-                batches = Integer.parseInt(query);
-            } catch (NumberFormatException e) {
-                return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
-                        .body("Please pass a number on the query string as 'batches'").build();
-            }
-        }
-
-        // Create a random array of messages.
-        // The number is how many events will be generated in the message batch for Event Hubs.
-        int[] messages = createRandomIntArray(batches, minEventsPerBatch, maxEventsPerBatch);
-        batchMessages.setValue(messages);
-
-        return request.createResponseBuilder(HttpStatus.OK).body("Started " + batches + " event batch producers.")
-                .build();
-    }
-
+    
     @FunctionName("ProduceEventBatch")
     public void processEventBatchMessage(
             @QueueTrigger(name = "queueTrigger", queueName = "%MessageQueueName%", connection = "QueueStorage") int eventsInBatch,
@@ -76,10 +46,11 @@ public class Function {
         int batches = randomInt(minBatchesPerTimer, maxBatchesPerTimer);
         int[] messages = createRandomIntArray(batches, minEventsPerBatch, maxEventsPerBatch);
         batchMessages.setValue(messages);
+        context.getLogger().info("Added " + batches + " messages.");
     }
 
     private int randomInt(int min, int max) {
-        return min == max ? min : random.nextInt(max - min) + min;
+        return max <= min? min : random.nextInt(max - min) + min;
     }
     
     private int[] createRandomIntArray(int count, int min, int max) {
@@ -95,15 +66,18 @@ public class Function {
         int value = defaultValue;
         String valueString = System.getenv(name);
 
-        if (valueString == null || valueString.isBlank()) {
+        if (valueString != null && !valueString.isBlank()) {
             try {
                 value = Integer.parseInt(valueString);
                 value = value < 1 ? defaultValue : value;
             } catch (NumberFormatException e) {
                 System.out.println("Failed to parse environment variable " + name + " as an integer.");
             }
+        } else {
+            System.out.println("Environment variable " + name + " not set.");
         }
         
+        System.out.println("Using " + name + " = " + value);
         return value;
     }
 }
