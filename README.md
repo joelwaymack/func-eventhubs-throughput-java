@@ -25,7 +25,7 @@ The consumer Function App is triggered by unprocessed (non-checkpointed) events 
 Each Function App requires a number of App Settings to work properly.
 
 1. Producer
-    * EventHubConnection - Connection string for the event hub with Send claims
+    * EventHubConnection - Connection string for the Event Hub with "Send" claim/permissions
     * QueueStorage - Connection string for the Storage Account to create the message queue in
     * MessageQueueName - The message queue name. If it does not exist, it will be created
     * EventHubName - The name of the Event Hub (not the namespace)
@@ -36,3 +36,50 @@ Each Function App requires a number of App Settings to work properly.
     * MinValueForEvent - Minimum value to send for each event (this is how many prime numbers to calculate for this event)
     * MaxValueForEvent": Maximum value to send for each event
     * TimerSchedule - The timer schedule ( recommended to be every second "* * * * * *")
+1. Consumer
+    * EventHubConnection - Connection string for the Event Hub with "Receive" claim/permissions
+    * EventHubConsumerGroup - The consumer group name to use when reading from the Event Hub
+    * EventHubName - The name of the Event Hub (not the namespace)
+
+## Deployment
+
+All of the code and infrastructure files are in this repository for a deployment of this solution. Ensure you are logged in to the Azure CLI before running the following Powershell commands.
+
+1. Deploy the infrastructure
+
+    ```powershell
+    az deployment sub create --location eastus --template-file ./infrastructure/main.bicep --name java-eh-throughput
+    ```
+
+1. Build and deploy the consumer Function App
+
+    ```powershell
+    cd ./consumer
+    mvn clean package
+    compress-archive -Path './target/azure-functions/consumer*/*' -DestinationPath './target/deploy.zip' -Force
+    az functionapp deployment source config-zip -g java-eh-throughput-rg -n java-eh-throughput-consumer-3zhodoof6x466-func --src ./target/deploy.zip
+    cd ..
+    ```
+
+1. Build and deploy the producer Function App
+
+    ```powershell
+    cd ./producer
+    mvn clean package
+    compress-archive -Path './target/azure-functions/producer*/*' -DestinationPath './target/deploy.zip' -Force
+    az functionapp deployment source config-zip -g java-eh-throughput-rg -n java-eh-throughput-producer-3zhodoof6x466-func --src ./target/deploy.zip
+    cd ..
+    ```
+
+## Clean up resources
+
+Don't forget to clean up your resources. While this solution runs on the lowest tier of resources, it can scale out and incur significant cost over time.
+
+```powershell
+az deployment sub delete --name java-eh-throughput
+az group delete --name java-eh-throughput-rg --yes
+```
+
+# TODO
+Check on storage queue name creation
+Check on App Insights instrumentation for Functions
