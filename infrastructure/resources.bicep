@@ -139,6 +139,8 @@ resource producerFunc 'Microsoft.Web/sites@2021-03-01' = {
   properties: {
     serverFarmId: producerFuncPlan.id
     siteConfig: {
+      javaVersion: '11'
+      functionAppScaleLimit: null
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
@@ -161,12 +163,12 @@ resource producerFunc 'Microsoft.Web/sites@2021-03-01' = {
           value: producerAi.properties.InstrumentationKey
         }
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'java'
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: producerAi.properties.ConnectionString
         }
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME_VERSION'
-          value: '11'
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'java'
         }
         {
           name: 'EventHubConnection'
@@ -212,6 +214,14 @@ resource producerFunc 'Microsoft.Web/sites@2021-03-01' = {
           name: 'TimerSchedule'
           value: '* * * * * *'
         }
+        {
+          name: 'SCALE_CONTROLLER_LOGGING_ENABLED'
+          value: 'AppInsights:Verbose'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
       ]
     }
   }
@@ -225,6 +235,8 @@ resource consumerFunc 'Microsoft.Web/sites@2021-03-01' = {
   properties: {
     serverFarmId: consumerFuncPlan.id
     siteConfig: {
+      javaVersion: '11'
+      functionAppScaleLimit: null
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
@@ -247,12 +259,12 @@ resource consumerFunc 'Microsoft.Web/sites@2021-03-01' = {
           value: consumerAi.properties.InstrumentationKey
         }
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'java'
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: consumerAi.properties.ConnectionString
         }
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME_VERSION'
-          value: '11'
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'java'
         }
         {
           name: 'EventHubConnection'
@@ -265,6 +277,14 @@ resource consumerFunc 'Microsoft.Web/sites@2021-03-01' = {
         {
           name: 'EventHubConsumerGroup'
           value: '$Default'
+        }
+        {
+          name: 'SCALE_CONTROLLER_LOGGING_ENABLED'
+          value: 'AppInsights:Verbose'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
         }
       ]
     }

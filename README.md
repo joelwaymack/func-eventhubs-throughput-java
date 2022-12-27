@@ -57,7 +57,9 @@ All of the code and infrastructure files are in this repository for a deployment
     cd ./consumer
     mvn clean package
     compress-archive -Path './target/azure-functions/consumer*/*' -DestinationPath './target/deploy.zip' -Force
-    az functionapp deployment source config-zip -g java-eh-throughput-rg -n java-eh-throughput-consumer-3zhodoof6x466-func --src ./target/deploy.zip
+    $rg = "java-eh-throughput-rg"
+    $cfunc = az functionapp list --query "([?resourceGroup=='java-eh-throughput-rg' && contains(name, 'consumer')])[0].name"
+    az functionapp deployment source config-zip -g $rg -n $cfunc --src ./target/deploy.zip
     cd ..
     ```
 
@@ -67,9 +69,17 @@ All of the code and infrastructure files are in this repository for a deployment
     cd ./producer
     mvn clean package
     compress-archive -Path './target/azure-functions/producer*/*' -DestinationPath './target/deploy.zip' -Force
-    az functionapp deployment source config-zip -g java-eh-throughput-rg -n java-eh-throughput-producer-3zhodoof6x466-func --src ./target/deploy.zip
+    $rg = "java-eh-throughput-rg"
+    $pfunc = az functionapp list --query "([?resourceGroup=='java-eh-throughput-rg' && contains(name, 'producer')])[0].name"
+    az functionapp deployment source config-zip -g $rg -n $pfunc --src ./target/deploy.zip
     cd ..
     ```
+
+## Change Settings
+
+You can change the settings in the producer and consumer to increase the overall event throughput. Running a lot more events through this processing pipeline will require an increase in throughput units in the Event Hub Namespace so that it has enough processing power. The producer and consumer Function Apps are set to scale out to the maximum number of instances automatically. For the producer, this is dependent on the max scale out settings for a Windows Function App Consumption plan. For the consumer, this is limited to the number of partitions (8 set in the infrastructure deployment files) in the Event Hub.
+
+Basic tier Event Hubs cannot have their partition count changed after creation. If you want to increase the number of partitions, stop both the Function Apps, delete the current Event Hub (topic1), and recreate it with the desired number of partitions. Then restart the Function Apps.
 
 ## Clean up resources
 
@@ -79,7 +89,3 @@ Don't forget to clean up your resources. While this solution runs on the lowest 
 az deployment sub delete --name java-eh-throughput
 az group delete --name java-eh-throughput-rg --yes
 ```
-
-# TODO
-Check on storage queue name creation
-Check on App Insights instrumentation for Functions
