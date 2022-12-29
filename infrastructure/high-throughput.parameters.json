@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "eventHubCapacity": {
+            "value": 4
+        },
+        "eventHubPartitionCount": {
+            "value": 100
+        },
+        "eventHubBatchSize": {
+            "value": 256
+        },
+        "eventHubPrefetchCount": {
+            "value": 512
+        },
+        "minBatchesPerTimer": {
+            "value": 200
+        },
+        "maxBatchesPerTimer": {
+            "value": 200
+        },
+        "minEventsPerBatch": {
+            "value": 1000
+        },
+        "maxEventsPerBatch": {
+            "value": 1000
+        },
+        "minValueForEvent": {
+            "value": 100
+        },
+        "maxValueForEvent": {
+            "value": 100
+        },
+        "eventHubTier": {
+            "value": "Premium"
+        }
+    }
+}

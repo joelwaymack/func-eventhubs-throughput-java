@@ -20,8 +20,7 @@ public class Function {
             try
             {
                 int numberOfPrimes = Integer.parseInt(numberOfPrimesString);
-                int primeNumber = calculatePrimes(numberOfPrimes);
-                context.getLogger().info("Calculated " + numberOfPrimes + " primes and found " + primeNumber);
+                calculatePrimes(numberOfPrimes);
             } catch (NumberFormatException e) {
                 context.getLogger().info("Could not parse " + numberOfPrimesString + " as an integer");
             }

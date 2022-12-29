@@ -48,8 +48,20 @@ All of the code and infrastructure files are in this repository for a deployment
 1. Deploy the infrastructure
 
     ```powershell
-    az deployment sub create --location eastus --template-file ./infrastructure/main.bicep --name java-eh-throughput
+    $rg = "java-eh-throughput-rg"
+    az group create --name $rg --location eastus
+    az deployment group create --template-file ./infrastructure/main.bicep --name event-hub-throughput --resource-group $rg
     ```
+
+    * Note: To set up massive throughput, use the following instead:
+  
+        ```powershell
+        $rg = "java-eh-high-throughput-rg"
+        az group create --name $rg --location eastus
+        cd ./infrastructure
+        az deployment group create --template-file ./main.bicep --name event-hub-high-throughput --parameters @high-throughput.parameters.json --resource-group $rg
+        cd ..
+        ```
 
 1. Build and deploy the consumer Function App
 
@@ -57,8 +69,7 @@ All of the code and infrastructure files are in this repository for a deployment
     cd ./consumer
     mvn clean package
     compress-archive -Path './target/azure-functions/consumer*/*' -DestinationPath './target/deploy.zip' -Force
-    $rg = "java-eh-throughput-rg"
-    $cfunc = az functionapp list --query "([?resourceGroup=='java-eh-throughput-rg' && contains(name, 'consumer')])[0].name"
+    $cfunc = az functionapp list --query "([?resourceGroup=='$rg' && contains(name, 'consumer')])[0].name"
     az functionapp deployment source config-zip -g $rg -n $cfunc --src ./target/deploy.zip
     cd ..
     ```
@@ -69,8 +80,7 @@ All of the code and infrastructure files are in this repository for a deployment
     cd ./producer
     mvn clean package
     compress-archive -Path './target/azure-functions/producer*/*' -DestinationPath './target/deploy.zip' -Force
-    $rg = "java-eh-throughput-rg"
-    $pfunc = az functionapp list --query "([?resourceGroup=='java-eh-throughput-rg' && contains(name, 'producer')])[0].name"
+    $pfunc = az functionapp list --query "([?resourceGroup=='$rg' && contains(name, 'producer')])[0].name"
     az functionapp deployment source config-zip -g $rg -n $pfunc --src ./target/deploy.zip
     cd ..
     ```
@@ -86,6 +96,5 @@ Basic tier Event Hubs cannot have their partition count changed after creation. 
 Don't forget to clean up your resources. While this solution runs on the lowest tier of resources, it can scale out and incur significant cost over time.
 
 ```powershell
-az deployment sub delete --name java-eh-throughput
-az group delete --name java-eh-throughput-rg --yes
+az group delete --name $rg --yes
 ```

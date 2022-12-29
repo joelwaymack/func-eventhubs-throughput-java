@@ -22,31 +22,40 @@ public class Function {
         minValueForEvent = parseEnvInt("MinValueForEvent", minValueForEvent);
         maxValueForEvent = parseEnvInt("MaxValueForEvent", maxValueForEvent);
     }
-    
-    @FunctionName("ProduceEventBatch")
-    public void processEventBatchMessage(
-            @QueueTrigger(name = "queueTrigger", queueName = "%MessageQueueName%", connection = "QueueStorage") int eventsInBatch,
-            @EventHubOutput(name = "ehOutput", eventHubName = "%EventHubName%", connection = "EventHubConnection") OutputBinding<int[]> eventHubOutput,
-            final ExecutionContext context) {
-        context.getLogger().info("Producing a batch of " + eventsInBatch + " events.");
 
-        int[] events = createRandomIntArray(eventsInBatch, minValueForEvent, maxValueForEvent);
-
-        eventHubOutput.setValue(events);
-    }
-
-    // Creates events every second.
-    @FunctionName("CreateEventBatchMessagesTimer")
-    public void createEventBatchMessagesTimer(
-            @TimerTrigger(
-                name = "batchTimerTrigger",
-                schedule = "%TimerSchedule%") String timerInfo,
-            @QueueOutput(name = "eventBatchMessage", queueName = "%MessageQueueName%", connection = "QueueStorage") OutputBinding<int[]> batchMessages,
-            final ExecutionContext context) {
+    // Creates a message for the number of batches to create.
+    @FunctionName("BatchTimer")
+    public void batchTimer(
+        @TimerTrigger(name = "timer", schedule = "%TimerSchedule%") String timerInfo,
+        @QueueOutput(name = "timerQueueOut", queueName = "%TimerElapsedQueue%", connection = "QueueStorage") OutputBinding<Integer> message,
+        final ExecutionContext context
+    ) {
         int batches = randomInt(minBatchesPerTimer, maxBatchesPerTimer);
-        int[] messages = createRandomIntArray(batches, minEventsPerBatch, maxEventsPerBatch);
-        batchMessages.setValue(messages);
-        context.getLogger().info("Added " + batches + " messages.");
+        message.setValue(batches);
+        context.getLogger().info("New message to create " + batches + " batches.");
+    }
+    
+    // Creates a message for the number of events to create in each batch.
+    @FunctionName("ProduceEventBatchMessages")
+    public void produceEventBatchMessages (
+        @QueueTrigger(name = "messageQueueIn", queueName = "%TimerElapsedQueue%", connection = "QueueStorage") int batches,
+        @QueueOutput(name = "messageQueueOut", queueName = "%EventBatchQueue%", connection = "QueueStorage") OutputBinding<int[]> eventBatchMessages,
+        final ExecutionContext context
+    ) {
+        eventBatchMessages.setValue(createRandomIntArray(batches, minEventsPerBatch, maxEventsPerBatch));
+        context.getLogger().info("Created " + batches + " messages for batches of events.");
+    }
+    
+    // Creates each batch of events.
+    @FunctionName("ProduceEventBatch")
+    public void produceEventBatch(
+        @QueueTrigger(name = "eventQueueIn", queueName = "%EventBatchQueue%", connection = "QueueStorage") int eventsInBatch,
+        @EventHubOutput(name = "eventHubOut", eventHubName = "%EventHubName%", connection = "EventHubConnection") OutputBinding<int[]> eventHubOutput,
+        final ExecutionContext context
+    ) {
+        int[] events = createRandomIntArray(eventsInBatch, minValueForEvent, maxValueForEvent);
+        eventHubOutput.setValue(events);
+        context.getLogger().info("Produced a batch of " + eventsInBatch + " events.");
     }
 
     private int randomInt(int min, int max) {
