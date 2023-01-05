@@ -11,6 +11,9 @@ param maxEventsPerBatch int = 10
 param minValueForEvent int = 200
 param maxValueForEvent int = 500
 param eventHubTier string = 'Basic'
+param functionsTier string = 'Dynamic'
+param functionsSku string = 'Y1'
+param functionsScaleLimit int = 100
 
 var uniqueId = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, name))
 
@@ -96,9 +99,10 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
     name: eventHubTier
     tier: eventHubTier
     capacity: eventHubCapacity
+  
   }
   properties: {
-    zoneRedundant: eventHubTier == 'Premium' ? true : false
+    zoneRedundant: eventHubTier == 'Premium'
   }
 }
 
@@ -136,8 +140,11 @@ resource producerFuncPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: '${name}-producer-func-plan'
   location: location
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: functionsSku
+    tier: functionsTier
+  }
+  properties: {
+    maximumElasticWorkerCount: functionsScaleLimit
   }
 }
 
@@ -145,8 +152,11 @@ resource consumerFuncPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: '${name}-consumer-func-plan'
   location: location
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: functionsSku
+    tier: functionsTier
+  }
+  properties: {
+    maximumElasticWorkerCount: functionsScaleLimit
   }
 }
 
