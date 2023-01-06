@@ -1,4 +1,4 @@
-package com.function;
+package com.function.handlers;
 
 import java.util.Random;
 
@@ -18,7 +18,7 @@ public class BaseHandler {
         return array;
     }
 
-    protected int parseEnvInt(String name, int defaultValue) {
+    protected static int parseEnvInt(String name, int defaultValue) {
         int value = defaultValue;
         String valueString = System.getenv(name);
 

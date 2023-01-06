@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "eventHubCapacity": {
-            "value": 16
+            "value": 8
         },
         "eventHubPartitionCount": {
             "value": 100
@@ -34,12 +34,6 @@
         },
         "eventHubTier": {
             "value": "Premium"
-        },
-        "functionsTier": {
-            "value": "Dynamic"
-        },
-        "functionsSku": {
-            "value": "Y1"
         }
     }
 }

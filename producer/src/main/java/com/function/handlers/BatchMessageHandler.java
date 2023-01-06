@@ -1,13 +1,13 @@
-package com.function;
+package com.function.handlers;
 
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 
 public class BatchMessageHandler extends BaseHandler {
-    private int minEventsPerBatch = 10;
-    private int maxEventsPerBatch = 10;
+    private static int minEventsPerBatch = 10;
+    private static int maxEventsPerBatch = 10;
 
-    public BatchMessageHandler() {
+    static {
         minEventsPerBatch = parseEnvInt("MinEventsPerBatch", minEventsPerBatch);
         maxEventsPerBatch = parseEnvInt("MaxEventsPerBatch", maxEventsPerBatch);
     }

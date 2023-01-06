@@ -1,13 +1,13 @@
-package com.function;
+package com.function.handlers;
 
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 
 public class TimerHandler extends BaseHandler {
-    private int minBatchesPerTimer = 1;
-    private int maxBatchesPerTimer = 1;
+    private static int minBatchesPerTimer = 1;
+    private static int maxBatchesPerTimer = 1;
 
-    public TimerHandler() {
+    static {
         minBatchesPerTimer = parseEnvInt("MinBatchesPerTimer", minBatchesPerTimer);
         maxBatchesPerTimer = parseEnvInt("MaxBatchesPerTimer", maxBatchesPerTimer);
     }

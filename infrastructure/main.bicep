@@ -14,6 +14,7 @@ param eventHubTier string = 'Basic'
 param functionsTier string = 'Dynamic'
 param functionsSku string = 'Y1'
 param functionsScaleLimit int = 100
+param payloadKbSize int = 1
 
 var uniqueId = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, name))
 
@@ -242,6 +243,10 @@ resource producerFunc 'Microsoft.Web/sites@2021-03-01' = {
         {
           name: 'MaxValueForEvent'
           value: string(maxValueForEvent)
+        }
+        {
+          name: 'PayloadKbSize'
+          value: string(payloadKbSize)
         }
         {
           name: 'TimerSchedule'
