@@ -10,11 +10,11 @@ In our scenario, Azure Functions are being used to simulate the event producer a
 
 ![Image](assets/simple.drawio.svg)
 
-To achieve high throughput in the production of events, two Functions are used in the Producer Function App.
+To achieve high throughput in the production of events, three Functions are used in the Producer Function App.
 
-The first, is a timer trigger that generates a number of batch messages and puts them in an Azure Storage Queue. Timer triggers will not execute on schedule, even if the timer has elapsed, when a previous execution of the timer-tiggered Function is still running. Also, timer triggers only fire once per Function App regardless of the number of instances of the Function App running the the hosting plan. To get around these issues if we want to generate a high volume of events, we create batch messages.
-
-The second Function is triggered off of unprocessed Azure Storage Queue messages. When invoked, it generates the event batch and then send the batch to the Event Hub. Due to the configuration of the underlying Event Hub SDK, events are batched to a single partition in the Event Hub per Function execution when using an output binding. Therefore, a high number of batch jobs are needed to saturate all Event Hub partitions.
+1. Timer Trigger - Generates a single message with the number of batches to send to event hub. It puts this message onto an Azure Storage Queue. This is to overcome the issue where a timer trigger will not execute again until after the current execution of the timer-tiggered Function finishes. (Essentially, after an execution finishes, the timer trigger calculates the elapsed time before it should execute again based off of the CRON value and then waits that long before executing.)
+1. Azure Storage Queue Trigger - Generates a number of queue messages based on the integer in the timer trigger queue message, essentially one per event hub batch that hsould be sent. These messages have a single integer value inside of them, the number of events for that batch.
+1. Azure Storage Queue Trigger - Creates a batch of events based on the integer number in the Azure Storage Queue batch message. When invoked, it generates the event batch and then sends the batch to the Event Hub. Due to the configuration of the underlying Event Hub SDK, events are batched to a single partition in the Event Hub per Function execution when using an output binding. Therefore, a high number of batch jobs are needed to saturate all Event Hub partitions.
 
 The consumer Function App is triggered by unprocessed (non-checkpointed) events in an Event Hub partition. The consumer Function App can scale out to the number of partitions in the Event Hub to maximize processing throughput since one instance can lock 1 to many partitions for processing.
 
